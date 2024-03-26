@@ -1,0 +1,30 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Realtime chat application using Express, Socket.io",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "express",
+    "socket.io",
+    "realtime",
+    "chat"
+  ],
+  "author": {
+    "name": "Abdujabborov Oybek",
+    "email": "abdujabborovoybek@gmail.com",
+    "url": "https://abdujabborov.uz"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
