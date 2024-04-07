@@ -4,7 +4,13 @@ const app = express();
 app.use(cors());
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
-  cors: { origin: ["http://127.0.0.1/:3000", "http://127.0.0.1/:3001"] },
+  cors: {
+    origin: [
+      "https://meeting-azure.vercel.app",
+      "http://127.0.0.1/:3000",
+      "http://127.0.0.1/:3001",
+    ],
+  },
 });
 
 const PORT = 8090 || process.env.PORT;

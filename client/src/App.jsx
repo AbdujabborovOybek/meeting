@@ -11,7 +11,7 @@ const configuration = {
   iceCandidatePoolSize: 10,
 };
 
-const socket = io("http://185.217.131.109:8090", {
+const socket = io("https://abdujabborov.uz", {
   transports: ["websocket"],
 });
 let pc;
