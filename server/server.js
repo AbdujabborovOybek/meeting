@@ -1,23 +1,37 @@
 const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-
+const cors = require("cors");
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  },
+app.use(cors());
+const server = require("http").createServer(app);
+const io = require("socket.io")(server, {
+  cors: { origin: ["http://127.0.0.1/:3000", "http://127.0.0.1/:3001"] },
 });
 
+const PORT = 8090 || process.env.PORT;
 io.on("connection", (socket) => {
-  console.log("Yangi foydalanuvchi ulandi");
+  console.log("Connected");
 
-  socket.on("camera-data", (data) => {
-    socket.broadcast.emit("camera-data", data);
+  socket.on("message", (message) => {
+    socket.broadcast.emit("message", message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Disconnected");
   });
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Server ${PORT}-portda ishga tushdi`));
+function error(err, req, res, next) {
+  // log it
+  if (!test) console.error(err.stack);
+
+  // respond with 500 "Internal Server Error".
+  res.status(500);
+  res.send("Internal Server Error");
+}
+app.use(error);
+
+app.get("/ping", (req, res) => {
+  res.send("pong");
+});
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
