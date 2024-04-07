@@ -20,6 +20,7 @@
   z-index: 100;
   border-radius: 5px;
   overflow: hidden;
+  background: #000;
 }
 
 .my_video > video {
