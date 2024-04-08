@@ -11,9 +11,7 @@ const configuration = {
   iceCandidatePoolSize: 10,
 };
 
-const socket = io("http://185.217.131.109:8090", {
-  transports: ["websocket"],
-});
+const socket = io("https://abdujabborov.uz");
 let pc;
 let localStream;
 let startButton;
@@ -207,6 +205,7 @@ function App() {
             autoPlay
             playsInline
             src=" "
+            muted
           ></video>
           <video
             ref={remoteVideo}
