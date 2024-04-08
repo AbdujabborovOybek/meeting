@@ -11,7 +11,9 @@ const configuration = {
   iceCandidatePoolSize: 10,
 };
 
-const socket = io("https://abdujabborov.uz");
+const socket = io("wss://abdujabborov.uz", {
+  transports: ["websocket"],
+});
 let pc;
 let localStream;
 let startButton;
