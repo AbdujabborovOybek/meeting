@@ -1,69 +1,38 @@
 import { io } from "socket.io-client";
-import { useRef, useEffect, useState } from "react";
-import { FiVideo, FiVideoOff, FiMic, FiMicOff } from "react-icons/fi";
+import { useRef, useEffect } from "react";
+import { FiVideo, FiVideoOff } from "react-icons/fi";
+import { GrUpdate } from "react-icons/gr";
 
-const configuration = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
+import "./Meet.css";
+const { RTCPeerConnection } = window;
 
-const socket = io("wss://abdujabborov.uz", {
-  transports: ["websocket"],
-});
+const urls = ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"];
+const configuration = { iceServers: [{ urls }], iceCandidatePoolSize: 10 };
+
+const options = { transports: ["websocket"] };
+const socket = io("http://147.45.159.240:8090", options);
+
 let pc;
 let localStream;
 let startButton;
 let hangupButton;
-let muteAudButton;
 let remoteVideo;
 let localVideo;
 
 socket.on("message", (e) => {
-  if (!localStream) {
-    console.log("not ready yet");
-    return;
-  }
-  switch (e.type) {
-    case "offer":
-      handleOffer(e);
-      break;
-    case "answer":
-      handleAnswer(e);
-      break;
-    case "candidate":
-      handleCandidate(e);
-      break;
-    case "ready":
-      // A second tab joined. This tab will initiate a call unless in a call already.
-      if (pc) {
-        console.log("already in call, ignoring");
-        return;
-      }
-      makeCall();
-      break;
-    case "bye":
-      if (pc) {
-        hangup();
-      }
-      break;
-    default:
-      console.log("unhandled", e);
-      break;
-  }
+  if (!localStream) return;
+  if (e.type === "offer") return handleOffer(e);
+  if (e.type === "answer") return handleAnswer(e);
+  if (e.type === "candidate") return handleCandidate(e);
+  if (e.type === "ready") return makeCall();
+  if (e.type === "bye") return hangup();
 });
 
 async function makeCall() {
   try {
     pc = new RTCPeerConnection(configuration);
     pc.onicecandidate = (e) => {
-      const message = {
-        type: "candidate",
-        candidate: null,
-      };
+      const message = { type: "candidate", candidate: null };
       if (e.candidate) {
         message.candidate = e.candidate.candidate;
         message.sdpMid = e.candidate.sdpMid;
@@ -71,6 +40,7 @@ async function makeCall() {
       }
       socket.emit("message", message);
     };
+
     pc.ontrack = (e) => (remoteVideo.current.srcObject = e.streams[0]);
     localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
     const offer = await pc.createOffer();
@@ -82,17 +52,11 @@ async function makeCall() {
 }
 
 async function handleOffer(offer) {
-  if (pc) {
-    console.error("existing peerconnection");
-    return;
-  }
+  if (pc) return;
   try {
     pc = new RTCPeerConnection(configuration);
     pc.onicecandidate = (e) => {
-      const message = {
-        type: "candidate",
-        candidate: null,
-      };
+      const message = { type: "candidate", candidate: null };
       if (e.candidate) {
         message.candidate = e.candidate.candidate;
         message.sdpMid = e.candidate.sdpMid;
@@ -103,7 +67,6 @@ async function handleOffer(offer) {
     pc.ontrack = (e) => (remoteVideo.current.srcObject = e.streams[0]);
     localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
     await pc.setRemoteDescription(offer);
-
     const answer = await pc.createAnswer();
     socket.emit("message", { type: "answer", sdp: answer.sdp });
     await pc.setLocalDescription(answer);
@@ -113,10 +76,7 @@ async function handleOffer(offer) {
 }
 
 async function handleAnswer(answer) {
-  if (!pc) {
-    console.error("no peerconnection");
-    return;
-  }
+  if (!pc) return console.log("no peerconnection");
   try {
     await pc.setRemoteDescription(answer);
   } catch (e) {
@@ -126,15 +86,9 @@ async function handleAnswer(answer) {
 
 async function handleCandidate(candidate) {
   try {
-    if (!pc) {
-      console.error("no peerconnection");
-      return;
-    }
-    if (!candidate) {
-      await pc.addIceCandidate(null);
-    } else {
-      await pc.addIceCandidate(candidate);
-    }
+    if (!pc) return console.log("no peerconnection");
+    if (!candidate) await pc.addIceCandidate(null);
+    if (candidate.candidate) await pc.addIceCandidate(candidate);
   } catch (e) {
     console.log(e);
   }
@@ -149,20 +103,16 @@ async function hangup() {
   localStream = null;
   startButton.current.disabled = false;
   hangupButton.current.disabled = true;
-  muteAudButton.current.disabled = true;
 }
 
-function App() {
+export const Meet = () => {
   startButton = useRef(null);
   hangupButton = useRef(null);
-  muteAudButton = useRef(null);
   localVideo = useRef(null);
   remoteVideo = useRef(null);
   useEffect(() => {
     hangupButton.current.disabled = true;
-    muteAudButton.current.disabled = true;
   }, []);
-  const [audiostate, setAudio] = useState(false);
 
   const startB = async () => {
     try {
@@ -177,8 +127,6 @@ function App() {
 
     startButton.current.disabled = true;
     hangupButton.current.disabled = false;
-    muteAudButton.current.disabled = false;
-
     socket.emit("message", { type: "ready" });
   };
 
@@ -187,38 +135,28 @@ function App() {
     socket.emit("message", { type: "bye" });
   };
 
-  function muteAudio() {
-    if (audiostate) {
-      localVideo.current.muted = true;
-      setAudio(false);
-    } else {
-      localVideo.current.muted = false;
-      setAudio(true);
-    }
-  }
+  const handleUpdate = async () => {
+    window.location.reload();
+  };
 
   return (
     <>
-      <main className="container  ">
-        <div className="video bg-main">
-          <video
-            ref={localVideo}
-            className="video-item"
-            autoPlay
-            playsInline
-            src=" "
-            muted
-          ></video>
-          <video
-            ref={remoteVideo}
-            className="video-item"
-            autoPlay
-            playsInline
-            src=" "
-          ></video>
-        </div>
+      <main className="meet">
+        <video
+          ref={localVideo}
+          autoPlay
+          className="meet-local"
+          src=""
+          muted
+        ></video>
+        <video
+          ref={remoteVideo}
+          autoPlay
+          className="meet-remote"
+          src=""
+        ></video>
 
-        <div className="btn">
+        <div className="actions">
           <button
             className="btn-item btn-start"
             ref={startButton}
@@ -233,17 +171,12 @@ function App() {
           >
             <FiVideoOff />
           </button>
-          <button
-            className="btn-item btn-start"
-            ref={muteAudButton}
-            onClick={muteAudio}
-          >
-            {audiostate ? <FiMic /> : <FiMicOff />}
-          </button>
         </div>
+
+        <button className="btn-update" onClick={handleUpdate}>
+          <GrUpdate />
+        </button>
       </main>
     </>
   );
-}
-
-export default App;
+};
