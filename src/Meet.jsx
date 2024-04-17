@@ -10,7 +10,7 @@ const urls = ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"];
 const configuration = { iceServers: [{ urls }], iceCandidatePoolSize: 10 };
 
 const options = { transports: ["websocket"] };
-const socket = io("wss://sandwichpark.ru/", options);
+const socket = io("http://147.45.159.240:8090", options);
 
 let pc;
 let localStream;
@@ -28,6 +28,7 @@ socket.on("message", (e) => {
   if (e.type === "bye") return hangup();
 });
 
+// Для отправки сообщения
 async function makeCall() {
   try {
     pc = new RTCPeerConnection(configuration);
@@ -51,6 +52,7 @@ async function makeCall() {
   }
 }
 
+// Для обработки сообщения
 async function handleOffer(offer) {
   if (pc) return;
   try {
