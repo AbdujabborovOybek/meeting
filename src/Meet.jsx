@@ -10,7 +10,7 @@ const urls = ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"];
 const configuration = { iceServers: [{ urls }], iceCandidatePoolSize: 10 };
 
 const options = { transports: ["websocket"] };
-const socket = io("http://147.45.159.240:8090", options);
+const socket = io("wss://sandwichpark.ru/", options);
 
 let pc;
 let localStream;
